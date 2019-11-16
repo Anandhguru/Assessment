@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="05cd7113-f0b7-4a31-9479-56d9f1af1bf7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="05296c27-10d2-4f9a-9981-7f106f06b775" >
+		<http:request-connection protocol="HTTPS" host="api.meteostat.net" port="443" />
+	</http:request-config>
+	<flow name="metostatFlow" doc:id="92b9f366-2974-4b1e-8493-2210ed9d3a2b" >
+		<http:listener doc:name="Listener" doc:id="eda44628-7165-45dc-a01d-035cd6e82794" config-ref="HTTP_Listener_config" path="/metostat"/>
+		<http:request method="GET" doc:name="Request" doc:id="61438fc1-83d6-46f6-95e1-1f193e004c6e" config-ref="HTTP_Request_configuration" path="/v1/history/daily">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"start" : attributes.queryParams.start,
+	"key" : "lR0cZrnk",
+	"end" : attributes.queryParams.end,
+	"station" : "10637"
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="f78faead-f96c-47e8-8f80-a78d88719549" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="6822bf99-7e56-401e-8a78-810cdbb1f430" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+"maximum Temperature recorded in a month":max(payload.data map $.temperature_max),
+"average precipitation": avg((payload.data filter(($.precipitation)!=null)) map $.precipitation),
+"lowest temperature on 1st week": min(((payload.data)[0 to 6] map $.temperature_min) filter $!=null) ,
+"lowest temperature on 2nd week": min(((payload.data)[7 to 14] map $.temperature_min) filter $!=null),
+"lowest temperature on 3rd week": min(((payload.data)[15 to 21] map $.temperature_min) filter $!=null) ,
+"lowest temperature on 4th week": min(((payload.data)[7 to ((max((payload.data) map $.date) splitBy "-")[2] as Number) - 1] map $.temperature_min) filter $!=null) 
+} ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
