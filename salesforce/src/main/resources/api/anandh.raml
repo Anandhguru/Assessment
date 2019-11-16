@@ -1,0 +1,33 @@
+#%RAML 1.0
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/4944467f-2915-4d86-9368-31613bf0c60d/ # 
+title: anandh
+mediaType: [ application/json, application/xml ]
+types: 
+  abc: !include type.raml
+/salesforce:
+  get:
+    headers:
+      client_id: string
+      client_secret: string
+    responses:
+      200:
+        body:
+          example: !include example.raml
+  post:
+    headers:
+      client_id: string
+      client_secret: string
+    responses:
+      201:
+        body:
+            type: abc
+            example: !include example1.raml
+  put:
+    headers:
+      client_id: string
+      client_secret: string
+    responses:
+      201:
+        body:
+            type: abc
+            example: !include example1.raml
