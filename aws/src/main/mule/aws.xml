@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sns="http://www.mulesoft.org/schema/mule/sns" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/sns http://www.mulesoft.org/schema/mule/sns/current/mule-sns.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f2f812cc-3049-4bed-9db0-02bb5173a5dc" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="082197e9-7d72-497a-b08d-8c789e1cc171" >
+		<s3:basic-connection accessKey="AKIAJWKZDPLHRO4WPP7A" secretKey="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" region="AP_SOUTH_1"/>
+	</s3:config>
+	<flow name="awsFlow" doc:id="dd12462c-4abd-4c05-be9c-eb7937fc8b6c">
+		<s3:new-object-trigger doc:name="On New Object" doc:id="0f66e59d-1b1c-4da0-ab14-68fbccafb59d" config-ref="Amazon_S3_Configuration" bucketName="anand10">
+			<scheduling-strategy >
+				<fixed-frequency frequency="5000"/>
+			</scheduling-strategy>
+		</s3:new-object-trigger>
+		<logger level="INFO" doc:name="Logger" doc:id="fb59759e-2ef0-4c5d-a57e-7026668e8c6b" message="#[payload]"/>
+		<s3:get-object doc:name="Get object" doc:id="967205f3-d87e-4763-a9be-01994944bcb8" config-ref="Amazon_S3_Configuration" bucketName="anand10" key="#[payload.key]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="bbaf2419-6dfc-4e58-9c32-75c1545f3595" message="#[payload]"/>
+	</flow>
+</mule>
